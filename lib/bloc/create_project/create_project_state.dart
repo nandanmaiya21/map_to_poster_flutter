@@ -1,18 +1,18 @@
 part of 'create_project_cubit.dart';
 
 class CreateProjectState {
-  final LocationResult? selectedLocation;
   final ThemePreset? selectedTheme;
+  final PosterLayout? selectedLayout;
 
-  const CreateProjectState({this.selectedLocation, this.selectedTheme});
+  const CreateProjectState({this.selectedTheme, this.selectedLayout});
 
   CreateProjectState copyWith({
-    LocationResult? selectedLocation,
     ThemePreset? selectedTheme,
+    PosterLayout? selectedLayout,
   }) {
     return CreateProjectState(
-      selectedLocation: selectedLocation ?? this.selectedLocation,
       selectedTheme: selectedTheme ?? this.selectedTheme,
+      selectedLayout: selectedLayout ?? this.selectedLayout,
     );
   }
 }

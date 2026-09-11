@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:map_to_poster/bloc/create_project/create_project_cubit.dart';
 
 import 'package:map_to_poster/bloc/theme/theme_cubit.dart';
 import 'package:map_to_poster/core/theme/app_color.dart';
@@ -7,6 +8,7 @@ import 'package:map_to_poster/core/theme/app_text_styles.dart';
 import 'package:map_to_poster/core/widgets/app_loader.dart';
 import 'package:map_to_poster/data/global_key/global_key.dart';
 import 'package:map_to_poster/data/models/theme_preset.dart';
+import 'package:map_to_poster/router/route_names.dart';
 import 'package:map_to_poster/shared/layout/layout.dart';
 
 class ThemeSelectionScreen extends StatelessWidget {
@@ -98,8 +100,13 @@ class _ThemeContent extends StatelessWidget {
               child: _ThemeCard(
                 theme: themes[index],
                 onTap: () {
-                  // Theme selection will be connected
-                  // to CreateProjectCubit next.
+                  final createProjectCubit = context.read<CreateProjectCubit>();
+                  createProjectCubit.selectTheme(themes[index]);
+
+                  navigatorKey.currentState?.pushNamed(
+                    RouteNames.layoutSelection,
+                    arguments: createProjectCubit,
+                  );
                 },
               ),
             );
@@ -131,7 +138,7 @@ class _ThemeHeader extends StatelessWidget {
           ],
         ),
         Text(
-          '02 / SELECT STYLE',
+          'STYLE PROJECT / 1 OF 2',
           style: AppTextStyles.technical.copyWith(color: AppColors.textMuted),
         ),
 

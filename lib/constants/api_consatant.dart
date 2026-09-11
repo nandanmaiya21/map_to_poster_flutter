@@ -15,4 +15,10 @@ class ApiConstants {
       fallback: "https://nominatim.openstreetmap.org/search",
     );
   }
+
+  // Poster-service serves rendered files (e.g. "/exports/foo.png") relative
+  // to its own root; nginx exposes that root at "/api/posters/".
+  static String posterAssetUrl(String path) {
+    return "${getBaseUrl()}/api/posters$path";
+  }
 }

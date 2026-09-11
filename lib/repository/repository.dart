@@ -1,5 +1,9 @@
 import 'package:map_to_poster/constants/api_consatant.dart';
+import 'package:map_to_poster/data/models/generate_map_request.dart';
+import 'package:map_to_poster/data/models/generate_map_response.dart';
 import 'package:map_to_poster/data/models/location_result.dart';
+import 'package:map_to_poster/data/models/render_map_request.dart';
+import 'package:map_to_poster/data/models/render_map_response.dart';
 import 'package:map_to_poster/data/models/theme_preset.dart';
 import 'package:map_to_poster/network/network.dart';
 
@@ -68,6 +72,32 @@ class Repository {
       fromJson: (data) {
         return ThemePreset.fromJson(data as Map<String, dynamic>?);
       },
+    );
+  }
+
+  Future<GenerateMapResponse> generateMap(GenerateMapRequest request) async {
+    return _client.post(
+      "/api/maps/generate",
+      body: request.toJson(),
+      fromJson: (data) => GenerateMapResponse.fromJson(data),
+    );
+  }
+
+  Future<GenerateMapResponse> getMapGenerationStatus(String mapId) async {
+    return _client.get(
+      "/api/maps/maps/$mapId",
+      fromJson: (data) => GenerateMapResponse.fromJson(data),
+    );
+  }
+
+  Future<RenderMapResponse> renderMap(
+    String mapId,
+    RenderMapRequest request,
+  ) async {
+    return _client.post(
+      "/api/posters/render/$mapId",
+      body: request.toJson(),
+      fromJson: (data) => RenderMapResponse.fromJson(data),
     );
   }
 }

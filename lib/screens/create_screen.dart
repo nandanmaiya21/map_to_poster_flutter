@@ -3,11 +3,9 @@ import 'package:map_to_poster/bloc/location/location_cubit.dart';
 
 import 'package:map_to_poster/core/theme/app_color.dart';
 import 'package:map_to_poster/core/theme/app_text_styles.dart';
-import 'package:map_to_poster/core/theme/app_theme.dart';
 import 'package:map_to_poster/core/toast/app_toast.dart';
 import 'package:map_to_poster/core/widgets/action_button.dart';
 import 'package:map_to_poster/core/widgets/app_loader.dart';
-import 'package:map_to_poster/data/global_key/global_key.dart';
 import 'package:map_to_poster/data/models/location_result.dart';
 import 'package:map_to_poster/router/route_names.dart';
 import 'package:map_to_poster/shared/layout/layout.dart';
@@ -142,7 +140,7 @@ class _CreateScreenState extends State<CreateScreen> {
 
               Navigator.pushNamed(
                 context,
-                RouteNames.themeSelection,
+                RouteNames.generateMap,
                 arguments: location,
               );
             },
@@ -239,7 +237,7 @@ class _LocationSearchResults extends StatelessWidget {
       child: ListView.separated(
         shrinkWrap: true,
         itemCount: locations.length,
-        separatorBuilder: (_, __) {
+        separatorBuilder: (_, _) {
           return const Divider(height: 1, color: AppColors.divider);
         },
         itemBuilder: (context, index) {

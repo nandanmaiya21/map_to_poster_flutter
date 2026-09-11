@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:map_to_poster/bloc/generate_map/generate_map_cubit.dart';
+import 'package:map_to_poster/bloc/layout/layout_cubit.dart';
+import 'package:map_to_poster/bloc/render_map/render_map_cubit.dart';
 import 'package:map_to_poster/bloc/theme/theme_cubit.dart';
-import 'package:map_to_poster/bloc/app_shell/app_shell_cubit.dart';
 import 'package:map_to_poster/bloc/create_project/create_project_cubit.dart';
 import 'package:map_to_poster/bloc/location/location_cubit.dart';
+import 'package:map_to_poster/data/global_key/global_key.dart';
 import 'package:map_to_poster/data/models/location_result.dart';
+import 'package:map_to_poster/data/models/project_entry.dart';
 import 'package:map_to_poster/repository/repository.dart';
 import 'package:map_to_poster/router/route_names.dart';
+import 'package:map_to_poster/screens/generate_map_screen.dart';
+import 'package:map_to_poster/screens/layout_selection.dart';
+import 'package:map_to_poster/screens/render_poster_screen.dart';
 import 'package:map_to_poster/screens/theme_selection.dart';
 import 'package:map_to_poster/services/location_service.dart';
 import 'package:map_to_poster/shared/layout/app_shell.dart';
@@ -60,19 +67,18 @@ class AppRouter {
                   locationService: LocationService(),
                 ),
               ),
-              BlocProvider(create: (context) => AppShellCubit()),
+              BlocProvider.value(value: appShellCubit),
             ],
             child: const AppShell(),
           ),
         );
       case RouteNames.themeSelection:
-        final location = settings.arguments as LocationResult;
+        final project = settings.arguments as ProjectEntry;
         return _animatedRoute(
           MultiBlocProvider(
             providers: [
               BlocProvider(
-                create: (context) =>
-                    CreateProjectCubit(initialLocation: location),
+                create: (context) => CreateProjectCubit(project: project),
               ),
               BlocProvider(
                 create: (context) =>
@@ -80,6 +86,41 @@ class AppRouter {
               ),
             ],
             child: const ThemeSelectionScreen(),
+          ),
+        );
+      case RouteNames.layoutSelection:
+        final createProjectCubit = settings.arguments as CreateProjectCubit;
+        return _animatedRoute(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider.value(value: createProjectCubit),
+              BlocProvider(create: (context) => LayoutCubit()),
+            ],
+            child: const LayoutSelectionScreen(),
+          ),
+        );
+      case RouteNames.generateMap:
+        final location = settings.arguments as LocationResult;
+        return _animatedRoute(
+          BlocProvider(
+            create: (context) => GenerateMapCubit(repository: Repository()),
+            child: GenerateMapScreen(location: location),
+          ),
+        );
+      case RouteNames.renderPoster:
+        final project = settings.arguments as ProjectEntry;
+        return _animatedRoute(
+          BlocProvider(
+            create: (context) => RenderMapCubit(
+              repository: Repository(),
+              mapId: project.mapId,
+              theme: project.themeSlug,
+              title: project.posterTitle,
+              subtitle: project.posterSubtitle,
+              coordinates: project.posterCoordinates,
+              layout: project.posterLayout.name,
+            ),
+            child: const RenderPosterScreen(),
           ),
         );
       default:
