@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:map_to_poster/core/responsive/responsive.dart';
 import 'package:map_to_poster/core/theme/app_color.dart';
 import 'package:map_to_poster/core/theme/app_text_styles.dart';
 import 'package:map_to_poster/core/widgets/action_button.dart';
+import 'package:map_to_poster/data/global_key/global_key.dart';
+
 import 'package:map_to_poster/shared/layout/layout.dart';
 
 class HomePage extends StatelessWidget {
@@ -10,31 +13,45 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final createButton = ActionButton(
+      text: "CREATE NEW POSTER",
+      onPressed: () => appShellCubit.updateIndex(1),
+      prefixIcon: const Icon(Icons.add, color: AppColors.textPrimary, size: 24),
+    );
+
     return AppLayout(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _HeroSection(),
+      child: ResponsiveTwoPane(
+        // Mobile layout (unchanged).
+        compact: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _HeroSection(),
 
-          SizedBox(height: 28),
+            SizedBox(height: 28),
 
-          _PosterPreview(),
+            WebMaxHeight(maxHeight: 640, child: _PosterPreview()),
 
-          SizedBox(height: 20),
+            SizedBox(height: 20),
 
-          ActionButton(
-            text: "CREATE NEW POSTER",
-            onPressed: () {},
-            prefixIcon: const Icon(
-              Icons.add,
-              color: AppColors.textPrimary,
-              size: 24,
-            ),
-          ),
-          SizedBox(height: 40),
+            createButton,
+            SizedBox(height: 40),
 
-          _RecentProjects(),
-        ],
+            _RecentProjects(),
+          ],
+        ),
+
+        // Wide web: intro + projects | poster preview.
+        start: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _HeroSection(),
+            const SizedBox(height: 32),
+            createButton,
+            const SizedBox(height: 48),
+            const _RecentProjects(),
+          ],
+        ),
+        end: const WebMaxHeight(maxHeight: 720, child: _PosterPreview()),
       ),
     );
   }

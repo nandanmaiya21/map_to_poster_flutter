@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:map_to_poster/bloc/app_shell/app_shell_cubit.dart';
+import 'package:map_to_poster/core/responsive/responsive.dart';
 import 'package:map_to_poster/core/theme/app_color.dart';
 import 'package:map_to_poster/core/theme/app_text_styles.dart';
 import 'package:map_to_poster/core/toast/app_toast.dart';
@@ -200,11 +201,14 @@ class _ProjectsGrid extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: projects.length + 1,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.68,
+      gridDelegate: Responsive.gridDelegate(
+        context,
+        mobile: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.68,
+        ),
       ),
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -283,10 +287,8 @@ class _ProjectCardState extends State<_ProjectCard> {
       if (!mounted) return;
 
       if (status.status == _kMapStatusCompleted) {
-        Navigator.of(context).pushNamed(
-          RouteNames.themeSelection,
-          arguments: widget.project,
-        );
+        Navigator.of(context)
+            .pushNamed(RouteNames.themeSelection, arguments: widget.project);
       } else if (status.status == _kMapStatusFailed) {
         AppToast.error(context, 'Poster generation failed for this project.');
       } else {
@@ -297,7 +299,10 @@ class _ProjectCardState extends State<_ProjectCard> {
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.error(context, 'Unable to check poster status. Please try again.');
+      AppToast.error(
+        context,
+        'Unable to check poster status. Please try again.',
+      );
     } finally {
       if (mounted) setState(() => _isCheckingStatus = false);
     }
@@ -307,15 +312,15 @@ class _ProjectCardState extends State<_ProjectCard> {
   Widget build(BuildContext context) {
     final project = widget.project;
 
-    final title = (project.locationName.isEmpty
-            ? 'MAP POSTER'
-            : project.locationName)
-        .toUpperCase();
+    final title =
+        (project.locationName.isEmpty ? 'MAP POSTER' : project.locationName)
+            .toUpperCase();
 
-    final shortId = (project.mapId.length > 8
-            ? project.mapId.substring(0, 8)
-            : project.mapId)
-        .toUpperCase();
+    final shortId =
+        (project.mapId.length > 8
+                ? project.mapId.substring(0, 8)
+                : project.mapId)
+            .toUpperCase();
 
     final isStyled = project.themeSlug.isNotEmpty;
 

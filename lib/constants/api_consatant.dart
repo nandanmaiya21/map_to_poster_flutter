@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiConstants {
@@ -6,6 +7,11 @@ class ApiConstants {
   }
 
   static String getBaseUrl() {
+    // A browser can't reach the Android-emulator host alias (10.0.2.2),
+    // so the web build has its own setting. Mobile is unchanged.
+    if (kIsWeb) {
+      return dotenv.get("WEB_BASEURL", fallback: "http://localhost:8080");
+    }
     return dotenv.get("BASEURL", fallback: "http://10.0.2.2:8080");
   }
 

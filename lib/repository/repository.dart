@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:map_to_poster/constants/api_consatant.dart';
 import 'package:map_to_poster/data/models/generate_map_request.dart';
 import 'package:map_to_poster/data/models/generate_map_response.dart';
@@ -25,7 +26,9 @@ class Repository {
       '/search',
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "MapToPoster/1.0 (Flutter mobile application; contact: nandanmaiya21@gmail.com)",
+        // Browsers forbid setting User-Agent (logged as an error and
+        // ignored), so only the mobile app sends it.
+        if (!kIsWeb) "User-Agent": "MapToPoster/1.0 (Flutter mobile application; contact: nandanmaiya21@gmail.com)",
       },
       queryParameters: {
         'q': query.trim(),
@@ -52,7 +55,9 @@ class Repository {
       '/reverse',
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "MapToPoster/1.0 (Flutter mobile application; contact: nandanmaiya21@gmail.com)",
+        // Browsers forbid setting User-Agent (logged as an error and
+        // ignored), so only the mobile app sends it.
+        if (!kIsWeb) "User-Agent": "MapToPoster/1.0 (Flutter mobile application; contact: nandanmaiya21@gmail.com)",
       },
       queryParameters: {
         'lat': latitude,

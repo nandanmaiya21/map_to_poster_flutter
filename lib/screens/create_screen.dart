@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:map_to_poster/bloc/location/location_cubit.dart';
 
+import 'package:map_to_poster/core/responsive/responsive.dart';
 import 'package:map_to_poster/core/theme/app_color.dart';
 import 'package:map_to_poster/core/theme/app_text_styles.dart';
 import 'package:map_to_poster/core/toast/app_toast.dart';
@@ -29,124 +30,149 @@ class _CreateScreenState extends State<CreateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final searchSection = <Widget>[
+      Text(
+        'SELECT A LOCATION',
+        style: AppTextStyles.technical.copyWith(color: AppColors.textMuted),
+      ),
+
+      const SizedBox(height: 12),
+      _LocationSearchField(
+        controller: _locationController,
+        onChanged: (value) {
+          context.read<LocationCubit>().searchLocations(value);
+        },
+      ),
+
+      BlocBuilder<LocationCubit, LocationState>(
+        builder: (context, state) {
+          if (state.status == LocationStatus.loading) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: AppLoader()),
+            );
+          }
+
+          final locations = state.searchResults;
+
+          if (locations == null || locations.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          return _LocationSearchResults(
+            locations: locations,
+            onSelected: (location) {
+              _locationController.text = location.name ?? '';
+
+              context.read<LocationCubit>().selectLocation(location);
+
+              FocusScope.of(context).unfocus();
+            },
+          );
+        },
+      ),
+      const SizedBox(height: 20),
+
+      const _OrDivider(),
+
+      const SizedBox(height: 20),
+
+      BlocConsumer<LocationCubit, LocationState>(
+        listener: (context, state) {
+          if (state.status == LocationStatus.success) {
+            _locationController.text = state.selectedLocation?.name ?? '';
+          }
+        },
+        builder: (context, state) {
+          final isLoading = state.status == LocationStatus.loading;
+
+          return ActionButton(
+            onPressed: isLoading
+                ? () {}
+                : () {
+                    context.read<LocationCubit>().getCurrentLocation();
+                  },
+            text: isLoading ? 'LOCATING...' : 'USE CURRENT LOCATION',
+            type: ActionButtonType.outlined,
+            fontSize: 16,
+            prefixIcon: Icon(
+              Icons.my_location,
+              color: isLoading ? AppColors.textMuted : AppColors.textPrimary,
+              size: 20,
+            ),
+          );
+        },
+      ),
+    ];
+
+    final mapPreview = BlocBuilder<LocationCubit, LocationState>(
+      builder: (context, state) {
+        return _MapPreviewPlaceholder(location: state.selectedLocation);
+      },
+    );
+
+    final continueButton = ActionButton(
+      text: "CONTINUE",
+      type: ActionButtonType.filled,
+      onPressed: () {
+        final location = context.read<LocationCubit>().state.selectedLocation;
+
+        if (location == null) {
+          AppToast.error(
+            context,
+            'Please select a location before continuing.',
+          );
+          return;
+        }
+
+        Navigator.pushNamed(
+          context,
+          RouteNames.generateMap,
+          arguments: location,
+        );
+      },
+    );
+
     return AppLayout(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _CreateHero(),
+      child: ResponsiveTwoPane(
+        // Mobile layout (unchanged).
+        compact: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _CreateHero(),
 
-          const SizedBox(height: 40),
+            const SizedBox(height: 40),
 
-          Text(
-            'SELECT A LOCATION',
-            style: AppTextStyles.technical.copyWith(color: AppColors.textMuted),
-          ),
+            ...searchSection,
 
-          const SizedBox(height: 12),
-          _LocationSearchField(
-            controller: _locationController,
-            onChanged: (value) {
-              context.read<LocationCubit>().searchLocations(value);
-            },
-          ),
+            const SizedBox(height: 36),
 
-          BlocBuilder<LocationCubit, LocationState>(
-            builder: (context, state) {
-              if (state.status == LocationStatus.loading) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: AppLoader()),
-                );
-              }
+            mapPreview,
 
-              final locations = state.searchResults;
+            const SizedBox(height: 24),
+            continueButton,
+            const SizedBox(height: 20),
+          ],
+        ),
 
-              if (locations == null || locations.isEmpty) {
-                return const SizedBox.shrink();
-              }
-
-              return _LocationSearchResults(
-                locations: locations,
-                onSelected: (location) {
-                  _locationController.text = location.name ?? '';
-
-                  context.read<LocationCubit>().selectLocation(location);
-
-                  FocusScope.of(context).unfocus();
-                },
-              );
-            },
-          ),
-          const SizedBox(height: 20),
-
-          const _OrDivider(),
-
-          const SizedBox(height: 20),
-
-          BlocConsumer<LocationCubit, LocationState>(
-            listener: (context, state) {
-              if (state.status == LocationStatus.success) {
-                _locationController.text = state.selectedLocation?.name ?? '';
-              }
-            },
-            builder: (context, state) {
-              final isLoading = state.status == LocationStatus.loading;
-
-              return ActionButton(
-                onPressed: isLoading
-                    ? () {}
-                    : () {
-                        context.read<LocationCubit>().getCurrentLocation();
-                      },
-                text: isLoading ? 'LOCATING...' : 'USE CURRENT LOCATION',
-                type: ActionButtonType.outlined,
-                fontSize: 16,
-                prefixIcon: Icon(
-                  Icons.my_location,
-                  color: isLoading
-                      ? AppColors.textMuted
-                      : AppColors.textPrimary,
-                  size: 20,
-                ),
-              );
-            },
-          ),
-
-          const SizedBox(height: 36),
-
-          BlocBuilder<LocationCubit, LocationState>(
-            builder: (context, state) {
-              return _MapPreviewPlaceholder(location: state.selectedLocation);
-            },
-          ),
-
-          const SizedBox(height: 24),
-          ActionButton(
-            text: "CONTINUE",
-            type: ActionButtonType.filled,
-            onPressed: () {
-              final location = context
-                  .read<LocationCubit>()
-                  .state
-                  .selectedLocation;
-
-              if (location == null) {
-                AppToast.error(
-                  context,
-                  'Please select a location before continuing.',
-                );
-                return;
-              }
-
-              Navigator.pushNamed(
-                context,
-                RouteNames.generateMap,
-                arguments: location,
-              );
-            },
-          ),
-          const SizedBox(height: 20),
-        ],
+        // Wide web: search | map preview + continue, bottoms aligned.
+        crossAxisAlignment: CrossAxisAlignment.end,
+        start: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _CreateHero(),
+            const SizedBox(height: 40),
+            ...searchSection,
+          ],
+        ),
+        end: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 360, child: mapPreview),
+            const SizedBox(height: 24),
+            continueButton,
+          ],
+        ),
       ),
     );
   }

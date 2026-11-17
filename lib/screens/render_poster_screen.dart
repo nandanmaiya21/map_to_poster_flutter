@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:map_to_poster/bloc/render_map/render_map_cubit.dart';
 import 'package:map_to_poster/constants/api_consatant.dart';
+import 'package:map_to_poster/core/responsive/responsive.dart';
 import 'package:map_to_poster/core/theme/app_color.dart';
 import 'package:map_to_poster/core/theme/app_text_styles.dart';
 import 'package:map_to_poster/core/toast/app_toast.dart';
@@ -50,60 +51,84 @@ class _RenderPosterScreenState extends State<RenderPosterScreen> {
   Widget build(BuildContext context) {
     final cubit = context.read<RenderMapCubit>();
 
+    final header = _RenderHeader(
+      onBack: () => navigatorKey.currentState?.pop(),
+    );
+
+    final posterPreview = BlocBuilder<RenderMapCubit, RenderMapState>(
+      builder: (context, state) {
+        return _PosterPreview(
+          job: state.jobFor(ExportFormat.png),
+          title: cubit.title,
+          subtitle: cubit.subtitle,
+          coordinates: cubit.coordinates,
+        );
+      },
+    );
+
+    final exportSection = <Widget>[
+      Text(
+        'EXPORT FORMATS',
+        style: AppTextStyles.technical.copyWith(color: AppColors.textMuted),
+      ),
+
+      const SizedBox(height: 12),
+
+      BlocBuilder<RenderMapCubit, RenderMapState>(
+        builder: (context, state) {
+          return Column(
+            children: ExportFormat.values.map((format) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _FormatTile(
+                  format: format,
+                  job: state.jobFor(format),
+                  onGenerate: () {
+                    context.read<RenderMapCubit>().render(format);
+                  },
+                  onOpen: _openFile,
+                ),
+              );
+            }).toList(),
+          );
+        },
+      ),
+
+      const SizedBox(height: 28),
+
+      ActionButton(
+        text: 'DONE',
+        type: ActionButtonType.filled,
+        onPressed: _finish,
+      ),
+    ];
+
     return AppLayout(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _RenderHeader(onBack: () => navigatorKey.currentState?.pop()),
+      child: ResponsiveTwoPane(
+        // Mobile layout (unchanged).
+        compact: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            header,
 
-          const SizedBox(height: 32),
+            const SizedBox(height: 32),
 
-          BlocBuilder<RenderMapCubit, RenderMapState>(
-            builder: (context, state) {
-              return _PosterPreview(
-                job: state.jobFor(ExportFormat.png),
-                title: cubit.title,
-                subtitle: cubit.subtitle,
-                coordinates: cubit.coordinates,
-              );
-            },
-          ),
+            WebMaxHeight(maxHeight: 720, child: posterPreview),
 
-          const SizedBox(height: 28),
+            const SizedBox(height: 28),
 
-          Text(
-            'EXPORT FORMATS',
-            style: AppTextStyles.technical.copyWith(color: AppColors.textMuted),
-          ),
+            ...exportSection,
 
-          const SizedBox(height: 12),
+            const SizedBox(height: 20),
+          ],
+        ),
 
-          BlocBuilder<RenderMapCubit, RenderMapState>(
-            builder: (context, state) {
-              return Column(
-                children: ExportFormat.values.map((format) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _FormatTile(
-                      format: format,
-                      job: state.jobFor(format),
-                      onGenerate: () {
-                        context.read<RenderMapCubit>().render(format);
-                      },
-                      onOpen: _openFile,
-                    ),
-                  );
-                }).toList(),
-              );
-            },
-          ),
-
-          const SizedBox(height: 28),
-
-          ActionButton(text: 'DONE', type: ActionButtonType.filled, onPressed: _finish),
-
-          const SizedBox(height: 20),
-        ],
+        // Wide web: header + exports | poster.
+        start: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [header, const SizedBox(height: 40), ...exportSection],
+        ),
+        end: WebMaxHeight(maxHeight: 820, child: posterPreview),
       ),
     );
   }
@@ -347,7 +372,10 @@ class _GeneratingPosterAnimationState extends State<_GeneratingPosterAnimation>
                         height: 46,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.neonLime, width: 1.5),
+                          border: Border.all(
+                            color: AppColors.neonLime,
+                            width: 1.5,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: AppColors.neonLime.withValues(alpha: glow),
@@ -439,7 +467,9 @@ class _GeneratingPosterAnimationState extends State<_GeneratingPosterAnimation>
 
                 _DecodeText(
                   text: widget.coordinates,
-                  style: AppTextStyles.label.copyWith(color: AppColors.neonLime),
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.neonLime,
+                  ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   startDelay: const Duration(milliseconds: 650),
@@ -642,7 +672,13 @@ class _RoadDrawPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    _drawAnimatedPath(canvas, _majorRoad(size), progress, AppColors.neonLime, 3);
+    _drawAnimatedPath(
+      canvas,
+      _majorRoad(size),
+      progress,
+      AppColors.neonLime,
+      3,
+    );
 
     final minorProgress = (progress + 0.5) % 1.0;
     _drawAnimatedPath(
@@ -714,7 +750,11 @@ class _PosterError extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: AppColors.neonLime, size: 40),
+            const Icon(
+              Icons.error_outline,
+              color: AppColors.neonLime,
+              size: 40,
+            ),
 
             const SizedBox(height: 14),
 
@@ -830,7 +870,12 @@ class _FormatTile extends StatelessWidget {
 
           const SizedBox(width: 10),
 
-          _Trailing(format: format, job: job, onGenerate: onGenerate, onOpen: onOpen),
+          _Trailing(
+            format: format,
+            job: job,
+            onGenerate: onGenerate,
+            onOpen: onOpen,
+          ),
         ],
       ),
     );
@@ -887,7 +932,9 @@ class _Trailing extends StatelessWidget {
           onTap: onGenerate,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.border),
+            ),
             child: Text(
               'GENERATE',
               style: AppTextStyles.technical.copyWith(

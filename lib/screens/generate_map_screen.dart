@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:map_to_poster/bloc/generate_map/generate_map_cubit.dart';
+import 'package:map_to_poster/core/responsive/responsive.dart';
 import 'package:map_to_poster/core/theme/app_color.dart';
 import 'package:map_to_poster/core/theme/app_text_styles.dart';
 import 'package:map_to_poster/core/toast/app_toast.dart';
@@ -90,83 +91,87 @@ class _GenerateMapScreenState extends State<GenerateMapScreen> {
         builder: (context, state) {
           final isLoading = state.status == GenerateMapStatus.loading;
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _GenerateHeader(),
+          return WebMaxWidth(
+            maxWidth: 720,
+            alignment: Alignment.topCenter,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _GenerateHeader(),
 
-              const SizedBox(height: 36),
+                const SizedBox(height: 36),
 
-              _SummaryTile(
-                icon: Icons.location_on_outlined,
-                label: 'LOCATION',
-                value: widget.location.name ?? '--',
-              ),
-
-              const SizedBox(height: 32),
-
-              Text(
-                'MAP RADIUS: ${_radius.round()} M',
-                style: AppTextStyles.technical.copyWith(
-                  color: AppColors.textMuted,
+                _SummaryTile(
+                  icon: Icons.location_on_outlined,
+                  label: 'LOCATION',
+                  value: widget.location.name ?? '--',
                 ),
-              ),
 
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: AppColors.neonLime,
-                  inactiveTrackColor: AppColors.divider,
-                  thumbColor: AppColors.textPrimary,
-                  overlayColor: AppColors.neonLime.withValues(alpha: 0.2),
-                ),
-                child: Slider(
-                  value: _radius,
-                  min: 500,
-                  max: 5000,
-                  divisions: 45,
-                  onChanged: isLoading
-                      ? null
-                      : (value) => setState(() => _radius = value),
-                ),
-              ),
+                const SizedBox(height: 32),
 
-              const SizedBox(height: 20),
-
-              if (isLoading)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Center(
-                    child: AppLoader(label: 'GENERATING POSTER...'),
+                Text(
+                  'MAP RADIUS: ${_radius.round()} M',
+                  style: AppTextStyles.technical.copyWith(
+                    color: AppColors.textMuted,
                   ),
-                )
-              else
-                ActionButton(
-                  text: 'GENERATE POSTER',
-                  type: ActionButtonType.filled,
-                  onPressed: () {
-                    final location = widget.location;
-
-                    if (location.latitude == null ||
-                        location.longitude == null) {
-                      AppToast.error(
-                        context,
-                        'Please select a location before generating.',
-                      );
-                      return;
-                    }
-
-                    context.read<GenerateMapCubit>().generate(
-                      GenerateMapRequest(
-                        latitude: location.latitude!,
-                        longitude: location.longitude!,
-                        radius: _radius.round(),
-                      ),
-                    );
-                  },
                 ),
 
-              const SizedBox(height: 20),
-            ],
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: AppColors.neonLime,
+                    inactiveTrackColor: AppColors.divider,
+                    thumbColor: AppColors.textPrimary,
+                    overlayColor: AppColors.neonLime.withValues(alpha: 0.2),
+                  ),
+                  child: Slider(
+                    value: _radius,
+                    min: 500,
+                    max: 5000,
+                    divisions: 45,
+                    onChanged: isLoading
+                        ? null
+                        : (value) => setState(() => _radius = value),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                if (isLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(
+                      child: AppLoader(label: 'GENERATING POSTER...'),
+                    ),
+                  )
+                else
+                  ActionButton(
+                    text: 'GENERATE POSTER',
+                    type: ActionButtonType.filled,
+                    onPressed: () {
+                      final location = widget.location;
+
+                      if (location.latitude == null ||
+                          location.longitude == null) {
+                        AppToast.error(
+                          context,
+                          'Please select a location before generating.',
+                        );
+                        return;
+                      }
+
+                      context.read<GenerateMapCubit>().generate(
+                        GenerateMapRequest(
+                          latitude: location.latitude!,
+                          longitude: location.longitude!,
+                          radius: _radius.round(),
+                        ),
+                      );
+                    },
+                  ),
+
+                const SizedBox(height: 20),
+              ],
+            ),
           );
         },
       ),

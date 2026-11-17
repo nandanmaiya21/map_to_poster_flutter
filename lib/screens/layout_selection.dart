@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:map_to_poster/bloc/create_project/create_project_cubit.dart';
 import 'package:map_to_poster/bloc/layout/layout_cubit.dart';
 
+import 'package:map_to_poster/core/responsive/responsive.dart';
 import 'package:map_to_poster/core/theme/app_color.dart';
 import 'package:map_to_poster/core/theme/app_text_styles.dart';
 import 'package:map_to_poster/core/toast/app_toast.dart';
@@ -65,11 +66,14 @@ class LayoutSelectionScreen extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: PosterLayout.values.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 14,
-              mainAxisSpacing: 14,
-              childAspectRatio: 0.68,
+            gridDelegate: Responsive.gridDelegate(
+              context,
+              mobile: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+                childAspectRatio: 0.68,
+              ),
             ),
             itemBuilder: (context, index) {
               final layout = PosterLayout.values[index];
@@ -90,38 +94,45 @@ class LayoutSelectionScreen extends StatelessWidget {
 
           const SizedBox(height: 32),
 
-          _ContinueButton(
-            onTap: () async {
-              final layout = context.read<LayoutCubit>().state.layout;
+          WebMaxWidth(
+            maxWidth: 360,
+            alignment: Alignment.centerRight,
+            child: _ContinueButton(
+              onTap: () async {
+                final layout = context.read<LayoutCubit>().state.layout;
 
-              if (layout == null) {
-                AppToast.error(context, 'Please select a layout to continue.');
-                return;
-              }
+                if (layout == null) {
+                  AppToast.error(
+                    context,
+                    'Please select a layout to continue.',
+                  );
+                  return;
+                }
 
-              final createProjectCubit = context.read<CreateProjectCubit>();
-              createProjectCubit.selectLayout(layout);
+                final createProjectCubit = context.read<CreateProjectCubit>();
+                createProjectCubit.selectLayout(layout);
 
-              final theme = createProjectCubit.state.selectedTheme;
-              final themeSlug = theme?.slug ?? '';
-              final project = createProjectCubit.project;
+                final theme = createProjectCubit.state.selectedTheme;
+                final themeSlug = theme?.slug ?? '';
+                final project = createProjectCubit.project;
 
-              await ProjectStorageService().updateProjectStyle(
-                mapId: project.mapId,
-                themeSlug: themeSlug,
-                posterLayout: layout,
-              );
-
-              if (!context.mounted) return;
-
-              navigatorKey.currentState?.pushNamed(
-                RouteNames.renderPoster,
-                arguments: project.copyWith(
+                await ProjectStorageService().updateProjectStyle(
+                  mapId: project.mapId,
                   themeSlug: themeSlug,
                   posterLayout: layout,
-                ),
-              );
-            },
+                );
+
+                if (!context.mounted) return;
+
+                navigatorKey.currentState?.pushNamed(
+                  RouteNames.renderPoster,
+                  arguments: project.copyWith(
+                    themeSlug: themeSlug,
+                    posterLayout: layout,
+                  ),
+                );
+              },
+            ),
           ),
 
           const SizedBox(height: 12),
